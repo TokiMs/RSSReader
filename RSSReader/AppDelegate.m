@@ -8,19 +8,37 @@
 
 #import "AppDelegate.h"
 
-@interface AppDelegate ()
+static NSString * const yahooRssURL = @"http://rss.dailynews.yahoo.co.jp/fc/rss.xml";
+static NSString * const googleFeedApiURLFormat = @"http://ajax.googleapis.com/ajax/services/feed/load?v=1.0&q=%@&num=%@";
 
-@property (weak) IBOutlet NSWindow *window;
+@interface AppDelegate ()
+@property (weak) IBOutlet NSWindow * window;
 @end
 
 @implementation AppDelegate
 
-- (void)applicationDidFinishLaunching:(NSNotification *)aNotification {
-    // Insert code here to initialize your application
+- (void)applicationDidFinishLaunching:(NSNotification *)notification
+{
+    NSURL * url = [NSURL URLWithString:[NSString stringWithFormat:googleFeedApiURLFormat, yahooRssURL, @"3"]];
+    
+    NSURLSessionDataTask * task = [[NSURLSession sharedSession] dataTaskWithURL:url completionHandler:^(NSData * data, NSURLResponse * response, NSError * error) {
+        NSDictionary * dict = [NSJSONSerialization JSONObjectWithData:data options:NSJSONReadingMutableContainers error:nil];
+        
+        NSDictionary * responseData = dict[@"responseData"];
+        NSDictionary * feed = responseData[@"feed"];
+        NSArray * entries = feed[@"entries"];
+        
+        NSLog(@"%@", entries);
+        for (NSDictionary * entry in entries) {
+            NSLog(@"title: %@", entry[@"title"]);
+        }
+    }];
+    [task resume];
 }
 
-- (void)applicationWillTerminate:(NSNotification *)aNotification {
-    // Insert code here to tear down your application
+- (void)applicationWillTerminate:(NSNotification *)notification
+{
+    
 }
 
 @end
